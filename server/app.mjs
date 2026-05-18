@@ -10,7 +10,7 @@ function json(res, status, body, headers = {}) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     ...headers,
   })
   res.end(JSON.stringify(body))
@@ -20,7 +20,7 @@ function empty(res, status = 204) {
   res.writeHead(status, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
   })
   res.end()
 }
@@ -51,14 +51,10 @@ function getCurrentUser(req) {
   return row || null
 }
 
-function listApiKeys(userId) {
-  return db.prepare("SELECT id, name, provider, token_id, masked_key, refreshed_at, last_used_at, request_count, created_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC, id DESC").all(userId)
-}
-
 function getAccount(userId) {
   const subscription = db.prepare("SELECT * FROM subscriptions WHERE user_id = ?").get(userId)
-  const apiKeys = listApiKeys(userId)
-  return { subscription, apiKeys, apiKey: apiKeys[0] || null, gateway: { mock: isMockGateway() } }
+  const apiKey = db.prepare("SELECT id, label, provider, token_id, masked_key, refreshed_at, last_used_at FROM api_keys WHERE user_id = ? ORDER BY id ASC LIMIT 1").get(userId)
+  return { subscription, apiKey, gateway: { mock: isMockGateway() } }
 }
 
 function requireUser(req, res) {
@@ -77,16 +73,16 @@ function ensureSubscription(userId) {
   return db.prepare("SELECT * FROM subscriptions WHERE user_id = ?").get(userId)
 }
 
-async function createKeyForUser(user, name) {
+async function createKeyForUser(user, label = '默认') {
   const customerKey = newCustomerApiKey()
   const gatewayToken = await createGatewayToken({ userId: user.id, email: user.email })
   const result = db.prepare(`
-    INSERT INTO api_keys (user_id, name, provider, token_id, key_cipher, masked_key, gateway_key_cipher, gateway_token_id, refreshed_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO api_keys
+      (user_id, label, provider, token_id, key_cipher, masked_key, gateway_key_cipher, gateway_token_id, refreshed_at)
+    VALUES (?, ?, 'kaires-api', ?, ?, ?, ?, ?, ?)
   `).run(
     user.id,
-    String(name || "Default Key").slice(0, 80) || "Default Key",
-    "kaires-api",
+    label || '默认',
     `kaires-${user.id}-${Date.now()}`,
     encryptKey(customerKey),
     maskKey(customerKey),
@@ -94,14 +90,15 @@ async function createKeyForUser(user, name) {
     gatewayToken.tokenId,
     nowIso(),
   )
-  const apiKey = db.prepare("SELECT id, name, provider, token_id, masked_key, refreshed_at, last_used_at, request_count, created_at FROM api_keys WHERE id = ?").get(result.lastInsertRowid)
+  const apiKey = db.prepare("SELECT id, label, provider, token_id, masked_key, refreshed_at, last_used_at, calls_this_month FROM api_keys WHERE id = ?").get(result.lastInsertRowid)
   return { ...apiKey, key: customerKey }
 }
 
-function ensureAnyKey(user) {
-  const existing = db.prepare("SELECT * FROM api_keys WHERE user_id = ? ORDER BY id ASC").get(user.id)
-  if (existing) return existing
-  return null
+// Legacy: kept for /api/api-key/refresh backward compat — replaces first key or creates one
+async function refreshKeyForUser(user) {
+  const existing = db.prepare("SELECT id FROM api_keys WHERE user_id = ? ORDER BY id ASC LIMIT 1").get(user.id)
+  if (existing) db.prepare("DELETE FROM api_keys WHERE id = ?").run(existing.id)
+  return createKeyForUser(user, '默认')
 }
 
 function findUserByApiKey(rawKey) {
@@ -164,7 +161,7 @@ async function handleOpenAIRequest(req, res) {
   if (userMessage?.content) db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'user', ?, ?)").run(apiKeyRow.user_id, userMessage.content, model)
   db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'assistant', ?, ?)").run(apiKeyRow.user_id, content, model)
   db.prepare("UPDATE subscriptions SET used_this_month = used_this_month + 1 WHERE user_id = ?").run(apiKeyRow.user_id)
-  db.prepare("UPDATE api_keys SET last_used_at = ?, request_count = request_count + 1 WHERE id = ?").run(nowIso(), apiKeyRow.id)
+  db.prepare("UPDATE api_keys SET last_used_at = ?, calls_this_month = calls_this_month + 1 WHERE id = ?").run(nowIso(), apiKeyRow.id)
   return json(res, 200, openAIChatResponse({ model, content }))
 }
 
@@ -234,39 +231,41 @@ export async function handleRequest(req, res) {
       return json(res, 200, { user: publicUser(user), ...getAccount(user.id) })
     }
 
+    if (req.method === "POST" && url.pathname === "/api/api-key/refresh") {
+      const user = requireUser(req, res)
+      if (!user) return
+      const apiKey = await refreshKeyForUser(user)
+      return json(res, 200, { apiKey, gateway: { mock: isMockGateway() } })
+    }
+
+    // ── Multi-key management ───────────────────────────────────────────────
     if (req.method === "GET" && url.pathname === "/api/api-keys") {
       const user = requireUser(req, res)
       if (!user) return
-      return json(res, 200, { apiKeys: listApiKeys(user.id), gateway: { mock: isMockGateway() } })
+      const keys = db.prepare(
+        "SELECT id, label, masked_key, last_used_at, calls_this_month, refreshed_at FROM api_keys WHERE user_id = ? ORDER BY id ASC"
+      ).all(user.id)
+      return json(res, 200, { keys })
     }
 
     if (req.method === "POST" && url.pathname === "/api/api-keys") {
       const user = requireUser(req, res)
       if (!user) return
       const body = await readBody(req)
-      const existing = listApiKeys(user.id)
-      if (existing.length >= 20) return json(res, 400, { message: "已达到 Key 数量上限（20）" })
-      const apiKey = await createKeyForUser(user, body.name)
-      return json(res, 200, { apiKey, apiKeys: listApiKeys(user.id), gateway: { mock: isMockGateway() } })
+      const label = String(body.label || "").trim().slice(0, 60) || "默认"
+      const apiKey = await createKeyForUser(user, label)
+      return json(res, 200, { apiKey })
     }
 
-    const deleteMatch = url.pathname.match(/^\/api\/api-keys\/(\d+)$/)
-    if (req.method === "DELETE" && deleteMatch) {
+    if (req.method === "DELETE" && url.pathname.startsWith("/api/api-keys/")) {
       const user = requireUser(req, res)
       if (!user) return
-      const id = Number(deleteMatch[1])
+      const id = parseInt(url.pathname.split("/").pop(), 10)
+      if (!id || isNaN(id)) return json(res, 400, { message: "Invalid key id" })
       const row = db.prepare("SELECT id FROM api_keys WHERE id = ? AND user_id = ?").get(id, user.id)
-      if (!row) return json(res, 404, { message: "Key 不存在" })
+      if (!row) return json(res, 404, { message: "Key not found" })
       db.prepare("DELETE FROM api_keys WHERE id = ?").run(id)
-      return json(res, 200, { ok: true, apiKeys: listApiKeys(user.id) })
-    }
-
-    // Legacy refresh kept as compatibility shim: creates a new Key labeled 'Refreshed Key'.
-    if (req.method === "POST" && url.pathname === "/api/api-key/refresh") {
-      const user = requireUser(req, res)
-      if (!user) return
-      const apiKey = await createKeyForUser(user, "Refreshed Key")
-      return json(res, 200, { apiKey, gateway: { mock: isMockGateway() } })
+      return json(res, 200, { ok: true })
     }
 
     if (req.method === "POST" && url.pathname === "/api/chat") {
@@ -276,10 +275,10 @@ export async function handleRequest(req, res) {
       if (subscription.status !== "active" || subscription.used_this_month >= subscription.monthly_limit) {
         return json(res, 402, { message: "订阅额度不足，请升级或等待下个周期" })
       }
-      let apiKeyRow = ensureAnyKey(user)
+      let apiKeyRow = db.prepare("SELECT * FROM api_keys WHERE user_id = ? ORDER BY id ASC LIMIT 1").get(user.id)
       if (!apiKeyRow) {
-        await createKeyForUser(user, "Default Key")
-        apiKeyRow = ensureAnyKey(user)
+        await createKeyForUser(user)
+        apiKeyRow = db.prepare("SELECT * FROM api_keys WHERE user_id = ? ORDER BY id ASC LIMIT 1").get(user.id)
       }
       const body = await readBody(req)
       const messages = Array.isArray(body.messages) ? body.messages : []
@@ -288,7 +287,6 @@ export async function handleRequest(req, res) {
       if (userMessage?.content) db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'user', ?, ?)").run(user.id, userMessage.content, body.model || null)
       db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'assistant', ?, ?)").run(user.id, content, body.model || null)
       db.prepare("UPDATE subscriptions SET used_this_month = used_this_month + 1 WHERE user_id = ?").run(user.id)
-      db.prepare("UPDATE api_keys SET last_used_at = ?, request_count = request_count + 1 WHERE id = ?").run(nowIso(), apiKeyRow.id)
       return json(res, 200, { message: { role: "assistant", content, model: body.model }, account: getAccount(user.id) })
     }
 

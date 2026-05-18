@@ -1,22 +1,19 @@
-export interface ApiKeyRecord {
-  id: number
-  name: string
-  provider: string
-  token_id?: string
-  masked_key: string
-  refreshed_at: string
-  last_used_at?: string
-  request_count: number
-  created_at: string
-  key?: string
-}
-
 export interface AccountState {
   user: { id: number; email: string; name: string }
   subscription: { plan: string; status: string; monthly_limit: number; used_this_month: number; current_period_end: string }
-  apiKey?: ApiKeyRecord | null
-  apiKeys?: ApiKeyRecord[]
+  apiKey?: { id?: number; label?: string; provider: string; token_id?: string; masked_key: string; refreshed_at: string; last_used_at?: string; key?: string; calls_this_month?: number }
   gateway: { mock: boolean }
+}
+
+export interface ApiKeyItem {
+  id: number
+  label: string
+  masked_key: string
+  last_used_at: string | null
+  calls_this_month: number
+  refreshed_at: string
+  /** Only present immediately after creation */
+  key?: string
 }
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -54,19 +51,19 @@ export function refreshKey() {
   return api<Pick<AccountState, "apiKey" | "gateway">>("/api/api-key/refresh", { method: "POST" })
 }
 
-export function listApiKeys() {
-  return api<{ apiKeys: ApiKeyRecord[]; gateway: { mock: boolean } }>("/api/api-keys")
+export function listKeys() {
+  return api<{ keys: ApiKeyItem[] }>("/api/api-keys")
 }
 
-export function createApiKey(name: string) {
-  return api<{ apiKey: ApiKeyRecord; apiKeys: ApiKeyRecord[]; gateway: { mock: boolean } }>("/api/api-keys", {
+export function createKey(label: string) {
+  return api<{ apiKey: ApiKeyItem & { key: string } }>("/api/api-keys", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ label }),
   })
 }
 
-export function deleteApiKey(id: number) {
-  return api<{ ok: true; apiKeys: ApiKeyRecord[] }>(`/api/api-keys/${id}`, { method: "DELETE" })
+export function deleteKey(id: number) {
+  return api<{ ok: true }>(`/api/api-keys/${id}`, { method: "DELETE" })
 }
 
 export function sendChat(model: string, messages: { role: "user" | "assistant"; content: string }[]) {

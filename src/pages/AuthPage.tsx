@@ -1,11 +1,13 @@
 import { useState } from "react"
-import { Navigate } from "react-router-dom"
+import { Navigate, useSearchParams } from "react-router-dom"
 import { Lock, Mail, UserPlus } from "lucide-react"
 import { login, register } from "../lib/api"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function AuthPage() {
   const { account, setAccount } = useAuth()
+  const [searchParams] = useSearchParams()
+  const from = searchParams.get("from") || "/chat"
   const [mode, setMode] = useState<"login" | "register">("login")
   const [email, setEmail] = useState("demo@kaires.local")
   const [password, setPassword] = useState("secret123")
@@ -13,7 +15,7 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  if (account) return <Navigate to="/chat" replace />
+  if (account) return <Navigate to={from} replace />
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()

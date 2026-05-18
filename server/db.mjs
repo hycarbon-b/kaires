@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 CREATE TABLE IF NOT EXISTS api_keys (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL DEFAULT 'Default Key',
+  label TEXT NOT NULL DEFAULT '默认',
   provider TEXT NOT NULL,
   token_id TEXT,
   key_cipher TEXT NOT NULL,
@@ -46,8 +46,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   gateway_key_cipher TEXT,
   gateway_token_id TEXT,
   last_used_at TEXT,
-  request_count INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  calls_this_month INTEGER NOT NULL DEFAULT 0,
   refreshed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -61,22 +60,19 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 );
 `)
 
-const apiKeyInfo = db.prepare("PRAGMA table_info(api_keys)").all()
-const apiKeyColumns = new Set(apiKeyInfo.map(column => column.name))
-const userIdIsPk = apiKeyInfo.some(column => column.name === "user_id" && column.pk === 1)
-if (!apiKeyColumns.has("gateway_key_cipher")) db.exec("ALTER TABLE api_keys ADD COLUMN gateway_key_cipher TEXT")
-if (!apiKeyColumns.has("gateway_token_id")) db.exec("ALTER TABLE api_keys ADD COLUMN gateway_token_id TEXT")
-if (!apiKeyColumns.has("last_used_at")) db.exec("ALTER TABLE api_keys ADD COLUMN last_used_at TEXT")
+// ── api_keys schema migration ──────────────────────────────────────────────
+// Detect whether this is the old single-key schema (user_id was PK, no id col)
+// or a fresh/already-migrated multi-key schema.
+const apiKeyColumns = new Set(db.prepare("PRAGMA table_info(api_keys)").all().map(column => column.name))
 
-// Migrate from legacy single-key-per-user schema (user_id PRIMARY KEY) to multi-key (id PK + user_id FK).
-if (userIdIsPk) {
-  db.exec("BEGIN")
-  try {
-    db.exec("ALTER TABLE api_keys RENAME TO api_keys_legacy")
-    db.exec(`CREATE TABLE api_keys (
+if (!apiKeyColumns.has("id")) {
+  // Old schema: user_id is PK. Rename, recreate, copy, drop.
+  db.exec("ALTER TABLE api_keys RENAME TO _api_keys_v1")
+  db.exec(`
+    CREATE TABLE api_keys (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      name TEXT NOT NULL DEFAULT 'Default Key',
+      label TEXT NOT NULL DEFAULT '默认',
       provider TEXT NOT NULL,
       token_id TEXT,
       key_cipher TEXT NOT NULL,
@@ -84,24 +80,27 @@ if (userIdIsPk) {
       gateway_key_cipher TEXT,
       gateway_token_id TEXT,
       last_used_at TEXT,
-      request_count INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      calls_this_month INTEGER NOT NULL DEFAULT 0,
       refreshed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`)
-    db.exec(`INSERT INTO api_keys (user_id, name, provider, token_id, key_cipher, masked_key, gateway_key_cipher, gateway_token_id, last_used_at, refreshed_at)
-      SELECT user_id, 'Default Key', provider, token_id, key_cipher, masked_key, gateway_key_cipher, gateway_token_id, last_used_at, refreshed_at FROM api_keys_legacy`)
-    db.exec("DROP TABLE api_keys_legacy")
-    db.exec("COMMIT")
-  } catch (error) {
-    db.exec("ROLLBACK")
-    throw error
-  }
+    )
+  `)
+  db.exec(`
+    INSERT INTO api_keys
+      (user_id, label, provider, token_id, key_cipher, masked_key,
+       gateway_key_cipher, gateway_token_id, last_used_at, refreshed_at)
+    SELECT user_id, '默认', provider, token_id, key_cipher, masked_key,
+           gateway_key_cipher, gateway_token_id, last_used_at, refreshed_at
+    FROM _api_keys_v1
+  `)
+  db.exec("DROP TABLE _api_keys_v1")
+} else {
+  // Already multi-key schema — add any missing columns
+  if (!apiKeyColumns.has("gateway_key_cipher")) db.exec("ALTER TABLE api_keys ADD COLUMN gateway_key_cipher TEXT")
+  if (!apiKeyColumns.has("gateway_token_id"))   db.exec("ALTER TABLE api_keys ADD COLUMN gateway_token_id TEXT")
+  if (!apiKeyColumns.has("last_used_at"))        db.exec("ALTER TABLE api_keys ADD COLUMN last_used_at TEXT")
+  if (!apiKeyColumns.has("label"))               db.exec("ALTER TABLE api_keys ADD COLUMN label TEXT NOT NULL DEFAULT '默认'")
+  if (!apiKeyColumns.has("calls_this_month"))    db.exec("ALTER TABLE api_keys ADD COLUMN calls_this_month INTEGER NOT NULL DEFAULT 0")
 }
-
-const finalApiKeyColumns = new Set(db.prepare("PRAGMA table_info(api_keys)").all().map(column => column.name))
-if (!finalApiKeyColumns.has("name")) db.exec("ALTER TABLE api_keys ADD COLUMN name TEXT NOT NULL DEFAULT 'Default Key'")
-if (!finalApiKeyColumns.has("request_count")) db.exec("ALTER TABLE api_keys ADD COLUMN request_count INTEGER NOT NULL DEFAULT 0")
-if (!finalApiKeyColumns.has("created_at")) db.exec("ALTER TABLE api_keys ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP")
 
 export function nowIso() {
   return new Date().toISOString()
