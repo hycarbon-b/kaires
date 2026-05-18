@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background-color: #07070a;
+  color: #fafaf9;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #07070a; }
+::-webkit-scrollbar-thumb { background: #292524; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #44403c; }
+.no-bar::-webkit-scrollbar { display: none; }
+.no-bar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ── Background texture ───────────────────── */
+/* Fine grid lines — precision-instrument feel */
+.dot-bg {
+  background-image:
+    linear-gradient(rgba(251,191,36,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(251,191,36,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Typography ───────────────────────────── */
+.font-display { font-family: 'Bebas Neue', system-ui, sans-serif; letter-spacing: 0.04em; }
+
+/* ── Gradient text: amber → orange ─────────── */
+.grad-text {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass card ───────────────────────────── */
+.glass {
+  background: rgba(14, 14, 18, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 191, 36, 0.08);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass:hover {
+  border-color: rgba(251, 191, 36, 0.22);
+  box-shadow: 0 0 28px rgba(251, 191, 36, 0.06);
+}
+
+/* ── Amber glow ───────────────────────────── */
+.a-glow {
+  box-shadow: 0 0 48px rgba(251, 191, 36, 0.15), 0 0 0 1px rgba(251, 191, 36, 0.2);
+}
+
+/* keep v-glow as alias */
+.v-glow { box-shadow: 0 0 48px rgba(251, 191, 36, 0.15), 0 0 0 1px rgba(251, 191, 36, 0.2); }
+
+/* ── Ambient orb ──────────────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  opacity: 0.12;
+}
+
+/* ── Code block ───────────────────────────── */
+.code-block {
+  background: #09090c;
+  border: 1px solid #1c1917;
+  border-radius: 10px;
+  padding: 1.25rem;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: #d6d3d1;
+}
+
+/* ── Token highlight colours ──────────────── */
+.tok-kw  { color: #fbbf24; }   /* amber  — keywords */
+.tok-str { color: #86efac; }   /* green  — strings  */
+.tok-fn  { color: #67e8f9; }   /* cyan   — functions */
+.tok-cm  { color: #57534e; }   /* stone  — comments */
+
+/* ── Mockup shared styles ─────────────────── */
+.mockup-frame {
+  background: #09090c;
+  border: 1px solid #1c1917;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ── Workflow connector line ──────────────── */
+.flow-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(251,191,36,0.4), rgba(28,25,23,0.6));
+  margin-bottom: 20px;
+}
