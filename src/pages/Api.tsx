@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Copy, Check, Key, Globe, Terminal, ChevronDown, ChevronUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5174'
+
 // ─── Copy button ───────────────────────────────
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -187,7 +189,7 @@ export default function ApiPage() {
               sk-••••••••••••••••••••••••••••••••
             </code>
             <a
-              href="http://localhost:3000"
+              href={`${APP_URL}/keys`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-amber-400 hover:text-amber-300 transition-colors px-2 shrink-0"
@@ -199,7 +201,7 @@ export default function ApiPage() {
 
         <div className="flex flex-wrap gap-3">
           <a
-            href="http://localhost:3000"
+            href={`${APP_URL}/keys`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-sm font-medium rounded-lg transition-colors"

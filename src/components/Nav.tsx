@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Sparkles, FlaskConical } from 'lucide-react'
+import { Menu, X, Sparkles, FlaskConical, KeyRound } from 'lucide-react'
+
+const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5174'
 
 const NAV_LINKS = [
   { label: '产品特性', href: '/#features' },
@@ -83,17 +85,18 @@ export default function Nav() {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           <Link
             to="/app"
-            className="text-sm text-stone-400 hover:text-stone-100 transition-colors"
-          >
-            登录
-          </Link>
-          <Link
-            to="/app"
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-amber-300 hover:text-amber-200 border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/5 rounded-lg transition-all"
           >
             <Sparkles size={13} />
-            免费获取 API Key
+            KAIROS APP
           </Link>
+          <a
+            href={`${APP_URL}/keys`}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
+          >
+            <KeyRound size={13} />
+            获取 API Key
+          </a>
         </div>
 
         {/* Mobile toggle */}
@@ -149,18 +152,19 @@ export default function Nav() {
             <Link
               to="/app"
               onClick={() => setOpen(false)}
-              className="px-4 py-2.5 text-sm text-stone-300 border border-stone-700 rounded-lg text-center"
-            >
-              登录
-            </Link>
-            <Link
-              to="/app"
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-amber-300 border border-amber-500/30 rounded-lg"
             >
               <Sparkles size={13} />
-              免费获取 API Key
+              KAIROS APP
             </Link>
+            <a
+              href={`${APP_URL}/keys`}
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg"
+            >
+              <KeyRound size={13} />
+              获取 API Key
+            </a>
           </div>
         </div>
       )}
