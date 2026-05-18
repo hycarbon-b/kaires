@@ -23,8 +23,16 @@ async function request(path, options = {}) {
 const email = `tester-${Date.now()}@kaires.local`
 await request("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password: "secret123", name: "Flow Tester" }) })
 await request("/api/subscription", { method: "POST", body: JSON.stringify({ plan: "pro" }) })
-const key = await request("/api/api-key/refresh", { method: "POST" })
-if (!key.apiKey?.masked_key || !key.apiKey?.key) throw new Error("missing refreshed key")
+const key = await request("/api/api-keys", { method: "POST", body: JSON.stringify({ name: "Production" }) })
+if (!key.apiKey?.masked_key || !key.apiKey?.key) throw new Error("missing created key")
+const list = await request("/api/api-keys")
+if (!Array.isArray(list.apiKeys) || list.apiKeys.length !== 1) throw new Error("expected exactly one key")
+const second = await request("/api/api-keys", { method: "POST", body: JSON.stringify({ name: "Staging" }) })
+const afterTwo = await request("/api/api-keys")
+if (afterTwo.apiKeys.length !== 2) throw new Error("expected two keys")
+await request(`/api/api-keys/${second.apiKey.id}`, { method: "DELETE" })
+const afterDelete = await request("/api/api-keys")
+if (afterDelete.apiKeys.length !== 1) throw new Error("delete did not remove key")
 const chat = await request("/api/chat", {
   method: "POST",
   body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "ping" }] }),

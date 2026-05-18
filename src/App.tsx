@@ -7,6 +7,8 @@ import ChatPage from "./pages/ChatPage"
 import ImageWorkbench from "./pages/ImageWorkbench"
 import AuthPage from "./pages/AuthPage"
 import AccountPage from "./pages/AccountPage"
+import DashboardPage from "./pages/DashboardPage"
+import KeysPage from "./pages/KeysPage"
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { account, loading } = useAuth()
@@ -21,7 +23,8 @@ function AppShell() {
       <Sidebar />
       <main className="flex-1 min-w-0 overflow-hidden dot-bg">
         <Routes>
-          <Route path="/" element={<Navigate to="/chat" replace />} />
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/keys" element={<KeysPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:id" element={<ChatPage />} />
           <Route path="/image" element={<ImageWorkbench />} />

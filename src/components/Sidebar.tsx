@@ -2,30 +2,24 @@ import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   Plus, MessageSquare, ImageIcon, Settings,
-  MoreHorizontal, Sparkles, User, ChevronRight,
+  User, ChevronRight, KeyRound, LayoutDashboard, Activity,
 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
-
-const HISTORY = [
-  { id: "1", title: "线代教学助手" },
-  { id: "2", title: "Python 爬虫帮助" },
-  { id: "3", title: "合同审查 - 采购" },
-  { id: "4", title: "季度报告分析" },
-  { id: "5", title: "客服话术优化" },
-]
-
-const BOTS = [
-  { id: "b1", title: "法律咨询 Bot", color: "bg-violet-500" },
-  { id: "b2", title: "投研助手", color: "bg-sky-500" },
-]
 
 export default function Sidebar() {
   const loc = useLocation()
   const navigate = useNavigate()
   const { account } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
-  const onChat = loc.pathname.startsWith("/chat")
-  const onImage = loc.pathname === "/image"
+
+  const isActive = (p: string) => loc.pathname === p || (p !== "/" && loc.pathname.startsWith(p))
+
+  const NAV: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
+    { to: "/", label: "控制台", icon: LayoutDashboard, exact: true },
+    { to: "/keys", label: "API Keys", icon: KeyRound },
+    { to: "/chat", label: "对话", icon: MessageSquare },
+    { to: "/image", label: "图片", icon: ImageIcon },
+  ]
 
   if (collapsed) {
     return (
@@ -39,49 +33,48 @@ export default function Sidebar() {
         >
           <span className="font-display text-sm text-black tracking-wider">K</span>
         </button>
-        <button
-          onClick={() => navigate("/chat")}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-            onChat
-              ? "bg-amber-500/15 text-amber-400"
-              : "text-stone-500 hover:text-stone-300 hover:bg-white/5"
-          }`}
-        >
-          <MessageSquare size={15} />
-        </button>
-        <button
-          onClick={() => navigate("/image")}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
-            onImage
-              ? "bg-amber-500/15 text-amber-400"
-              : "text-stone-500 hover:text-stone-300 hover:bg-white/5"
-          }`}
-        >
-          <ImageIcon size={15} />
-        </button>
+        {NAV.map(item => {
+          const active = item.exact ? loc.pathname === item.to : isActive(item.to)
+          const Icon = item.icon
+          return (
+            <button
+              key={item.to}
+              onClick={() => navigate(item.to)}
+              title={item.label}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                active ? "bg-amber-500/15 text-amber-400" : "text-stone-500 hover:text-stone-300 hover:bg-white/5"
+              }`}
+            >
+              <Icon size={15} />
+            </button>
+          )
+        })}
       </aside>
     )
   }
+
+  const monthlyUsed = account?.subscription.used_this_month ?? 0
+  const monthlyLimit = account?.subscription.monthly_limit ?? 0
+  const usagePct = monthlyLimit ? Math.min(100, Math.round((monthlyUsed / monthlyLimit) * 100)) : 0
 
   return (
     <aside
       className="w-64 flex-shrink-0 flex flex-col overflow-hidden border-r"
       style={{ background: "#0d0d11", borderColor: "rgba(251,191,36,0.08)" }}
     >
-      {/* Logo */}
       <div
         className="px-4 py-3 flex items-center justify-between border-b"
         style={{ borderColor: "rgba(251,191,36,0.06)" }}
       >
-        <div className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
             <span className="font-display text-sm text-black tracking-widest">K</span>
           </div>
           <div className="flex flex-col leading-none gap-0.5">
-            <span className="font-display text-base text-stone-100 tracking-[0.12em]">KAIROS APP</span>
-            <span className="text-[9px] text-amber-400/70 tracking-[0.25em]">PERSONAL AI</span>
+            <span className="font-display text-base text-stone-100 tracking-[0.12em]">KAIROS</span>
+            <span className="text-[9px] text-amber-400/70 tracking-[0.25em]">RELAY API</span>
           </div>
-        </div>
+        </Link>
         <button
           onClick={() => setCollapsed(true)}
           className="text-stone-600 hover:text-stone-400 transition-colors p-1 rounded"
@@ -90,88 +83,55 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* New chat */}
       <div className="px-3 pt-3 pb-1">
         <Link
-          to="/chat"
+          to="/keys"
           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-medium transition-colors"
         >
           <Plus size={14} />
-          新对话
+          新增 API Key
         </Link>
       </div>
 
-      {/* Nav tabs */}
-      <div className="px-3 py-2 flex gap-1">
-        <Link
-          to="/chat"
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-colors ${
-            onChat
-              ? "bg-amber-500/12 text-amber-400 font-medium border border-amber-500/15"
-              : "text-stone-500 hover:bg-white/4 hover:text-stone-300"
-          }`}
-        >
-          <MessageSquare size={12} />
-          对话
-        </Link>
-        <Link
-          to="/image"
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-colors ${
-            onImage
-              ? "bg-amber-500/12 text-amber-400 font-medium border border-amber-500/15"
-              : "text-stone-500 hover:bg-white/4 hover:text-stone-300"
-          }`}
-        >
-          <ImageIcon size={12} />
-          图片工作台
-        </Link>
-      </div>
-
-      {/* History */}
-      <div className="flex-1 overflow-y-auto no-bar px-2 pb-2">
-        <p className="px-2 py-2 text-[10px] font-medium text-stone-600 uppercase tracking-[0.15em]">
-          最近对话
-        </p>
-        {HISTORY.map(h => (
-          <Link
-            key={h.id}
-            to={`/chat/${h.id}`}
-            className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
-              loc.pathname === `/chat/${h.id}`
-                ? "bg-amber-500/10 text-amber-300 border border-amber-500/15"
-                : "text-stone-400 hover:bg-white/4 hover:text-stone-200"
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <MessageSquare size={11} className="shrink-0 text-stone-600" />
-              <span className="truncate text-xs">{h.title}</span>
-            </div>
-            <button className="opacity-0 group-hover:opacity-100 transition-opacity text-stone-600 hover:text-stone-400 shrink-0">
-              <MoreHorizontal size={12} />
-            </button>
-          </Link>
-        ))}
-
-        <p className="px-2 py-2 mt-2 text-[10px] font-medium text-stone-600 uppercase tracking-[0.15em]">
-          我的 Bot
-        </p>
-        {BOTS.map(b => (
-          <Link
-            key={b.id}
-            to={`/chat/${b.id}`}
-            className="group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs text-stone-400 hover:bg-white/4 hover:text-stone-200 transition-colors"
-          >
-            <span
-              className={`w-5 h-5 rounded-full ${b.color} flex items-center justify-center shrink-0`}
+      <nav className="px-2 pt-2 pb-3 flex flex-col gap-0.5">
+        {NAV.map(item => {
+          const active = item.exact ? loc.pathname === item.to : isActive(item.to)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                active
+                  ? "bg-amber-500/10 text-amber-300 border border-amber-500/15"
+                  : "text-stone-400 hover:bg-white/4 hover:text-stone-200 border border-transparent"
+              }`}
             >
-              <Sparkles size={9} className="text-white" />
-            </span>
-            <span className="truncate">{b.title}</span>
-          </Link>
-        ))}
+              <Icon size={13} />
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="flex-1" />
+
+      <div className="mx-3 mb-3 rounded-xl border border-stone-800/80 bg-black/30 p-3">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-1.5">
+          <Activity size={11} className="text-amber-400" /> 本月用量
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-stone-100 text-sm font-mono">{monthlyUsed}</span>
+          <span className="text-stone-500 text-[10px]">/ {monthlyLimit}</span>
+        </div>
+        <div className="mt-1.5 h-1 rounded-full bg-stone-800 overflow-hidden">
+          <div className="h-full bg-amber-500/70" style={{ width: `${usagePct}%` }} />
+        </div>
+        <Link to="/account" className="block mt-2 text-[10px] text-stone-500 hover:text-amber-300">
+          {account?.subscription.plan?.toUpperCase() || "FREE"} 方案 · 升级 →
+        </Link>
       </div>
 
-      {/* Bottom bar */}
       <div
         className="px-3 py-3 flex items-center justify-between gap-2 border-t"
         style={{ borderColor: "rgba(251,191,36,0.06)" }}
@@ -188,7 +148,7 @@ export default function Sidebar() {
         <button
           onClick={() => navigate("/account")}
           className="w-7 h-7 rounded-md flex items-center justify-center text-stone-600 hover:text-stone-400 hover:bg-white/5 transition-colors"
-          title="设置"
+          title="账户与订阅"
         >
           <Settings size={13} />
         </button>

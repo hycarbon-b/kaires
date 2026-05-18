@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react"
+import { Link } from "react-router-dom"
 import {
-  Send, Paperclip, ChevronDown, Bot, Share2, Library, Sparkles, RefreshCcw,
+  Send, Paperclip, ChevronDown, Bot, Share2, Library, Sparkles, KeyRound,
 } from "lucide-react"
 import type { Message, FileItem } from "../types"
 import MessageBubble from "../components/MessageBubble"
 import FileLibraryPanel from "../components/FileLibraryPanel"
 import ShareBotModal from "../components/ShareBotModal"
-import { refreshKey, sendChat } from "../lib/api"
+import { sendChat } from "../lib/api"
 import { useAuth } from "../contexts/AuthContext"
 
 const MODELS = ["KAIROS Pro", "KAIROS Fast", "GPT-4o", "Claude 3.7", "Gemini 2.5"]
@@ -29,7 +30,6 @@ export default function ChatPage() {
   const [showShare, setShowShare] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
@@ -63,19 +63,6 @@ export default function ChatPage() {
     }
   }
 
-  const onRefreshKey = async () => {
-    setRefreshing(true)
-    setError(null)
-    try {
-      await refreshKey()
-      await reload()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "刷新 Key 失败")
-    } finally {
-      setRefreshing(false)
-    }
-  }
-
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send() }
   }
@@ -106,27 +93,24 @@ export default function ChatPage() {
             <Bot size={14} className="text-amber-400" />
           </div>
           <div className="flex flex-col leading-none gap-0.5">
-            <span className="text-sm font-medium text-stone-100">智能文档助手</span>
+            <span className="text-sm font-medium text-stone-100">智能文档助手 <span className="text-[9px] text-stone-600 ml-1">内置 Demo</span></span>
             <div className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"
-              />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow" />
               <span className="text-[10px] text-stone-500 uppercase tracking-wider">
-                {account?.apiKey ? `${account.subscription.plan.toUpperCase()} · ${account.apiKey.masked_key}` : "等待刷新 API Key"}
+                {account ? `${account.subscription.plan.toUpperCase()} · ${account.subscription.used_this_month}/${account.subscription.monthly_limit}` : "连接中"}
               </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onRefreshKey}
-            disabled={refreshing}
-            aria-label="刷新 API Key"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-stone-500 hover:text-amber-400 hover:bg-white/5 disabled:opacity-50 transition-colors"
+          <Link
+            to="/keys"
+            aria-label="管理 API Keys"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-stone-500 hover:text-amber-400 hover:bg-white/5 transition-colors"
           >
-            <RefreshCcw size={12} className={refreshing ? "animate-spin" : ""} />
-            刷新 Key
-          </button>
+            <KeyRound size={12} />
+            Keys
+          </Link>
           <button
             onClick={() => setShowFiles(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${

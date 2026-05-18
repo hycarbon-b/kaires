@@ -1,7 +1,21 @@
+export interface ApiKeyRecord {
+  id: number
+  name: string
+  provider: string
+  token_id?: string
+  masked_key: string
+  refreshed_at: string
+  last_used_at?: string
+  request_count: number
+  created_at: string
+  key?: string
+}
+
 export interface AccountState {
   user: { id: number; email: string; name: string }
   subscription: { plan: string; status: string; monthly_limit: number; used_this_month: number; current_period_end: string }
-  apiKey?: { provider: string; token_id?: string; masked_key: string; refreshed_at: string; last_used_at?: string; key?: string }
+  apiKey?: ApiKeyRecord | null
+  apiKeys?: ApiKeyRecord[]
   gateway: { mock: boolean }
 }
 
@@ -38,6 +52,21 @@ export function updateSubscription(plan: string) {
 
 export function refreshKey() {
   return api<Pick<AccountState, "apiKey" | "gateway">>("/api/api-key/refresh", { method: "POST" })
+}
+
+export function listApiKeys() {
+  return api<{ apiKeys: ApiKeyRecord[]; gateway: { mock: boolean } }>("/api/api-keys")
+}
+
+export function createApiKey(name: string) {
+  return api<{ apiKey: ApiKeyRecord; apiKeys: ApiKeyRecord[]; gateway: { mock: boolean } }>("/api/api-keys", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  })
+}
+
+export function deleteApiKey(id: number) {
+  return api<{ ok: true; apiKeys: ApiKeyRecord[] }>(`/api/api-keys/${id}`, { method: "DELETE" })
 }
 
 export function sendChat(model: string, messages: { role: "user" | "assistant"; content: string }[]) {
