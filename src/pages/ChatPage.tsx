@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react"
 import {
-  Send, Paperclip, ChevronDown, Bot, Share2, Library, Sparkles,
+  Send, Paperclip, ChevronDown, Bot, Share2, Library, Sparkles, RefreshCcw,
 } from "lucide-react"
 import type { Message, FileItem } from "../types"
 import MessageBubble from "../components/MessageBubble"
 import FileLibraryPanel from "../components/FileLibraryPanel"
 import ShareBotModal from "../components/ShareBotModal"
+import { refreshKey, sendChat } from "../lib/api"
+import { useAuth } from "../contexts/AuthContext"
 
 const MODELS = ["KAIROS Pro", "KAIROS Fast", "GPT-4o", "Claude 3.7", "Gemini 2.5"]
 const MOCK_FILES: FileItem[] = [
@@ -18,6 +20,7 @@ const INIT: Message[] = [
 ]
 
 export default function ChatPage() {
+  const { account, reload } = useAuth()
   const [messages, setMessages] = useState<Message[]>(INIT)
   const [input, setInput] = useState("")
   const [model, setModel] = useState(MODELS[0])
@@ -25,6 +28,8 @@ export default function ChatPage() {
   const [showFiles, setShowFiles] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
@@ -33,20 +38,42 @@ export default function ChatPage() {
   }, [messages])
 
   const send = async () => {
-    if (!input.trim() || sending) return
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() }
+    const content = input.trim() || textRef.current?.value.trim() || ""
+    if (!content || sending) return
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content }
     setMessages(prev => [...prev, userMsg])
     setInput("")
     setSending(true)
+    setError(null)
     if (textRef.current) textRef.current.style.height = "auto"
-    await new Promise(r => setTimeout(r, 1200))
-    const reply: Message = {
-      id: (Date.now() + 1).toString(), role: "assistant",
-      content: "这是基于知识库的模拟回复。实际部署后将调用您选择的 AI 模型进行真实推理，并结合 RAG 向量检索返回精准答案。",
-      model,
+    try {
+      const response = await sendChat(model, [...messages, userMsg].map(msg => ({ role: msg.role, content: msg.content })))
+      const reply: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: response.message.content,
+        model,
+      }
+      setMessages(prev => [...prev, reply])
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "发送失败")
+    } finally {
+      setSending(false)
     }
-    setMessages(prev => [...prev, reply])
-    setSending(false)
+  }
+
+  const onRefreshKey = async () => {
+    setRefreshing(true)
+    setError(null)
+    try {
+      await refreshKey()
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "刷新 Key 失败")
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   const handleKey = (e: React.KeyboardEvent) => {
@@ -57,6 +84,11 @@ export default function ChatPage() {
     if (!textRef.current) return
     textRef.current.style.height = "auto"
     textRef.current.style.height = Math.min(textRef.current.scrollHeight, 160) + "px"
+  }
+
+  const updateInput = (value: string) => {
+    setInput(value)
+    autoResize()
   }
 
   return (
@@ -79,11 +111,22 @@ export default function ChatPage() {
               <span
                 className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"
               />
-              <span className="text-[10px] text-stone-500 uppercase tracking-wider">RAG 已激活</span>
+              <span className="text-[10px] text-stone-500 uppercase tracking-wider">
+                {account?.apiKey ? `${account.subscription.plan.toUpperCase()} · ${account.apiKey.masked_key}` : "等待刷新 New API Key"}
+              </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={onRefreshKey}
+            disabled={refreshing}
+            aria-label="刷新 New API Key"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-stone-500 hover:text-amber-400 hover:bg-white/5 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCcw size={12} className={refreshing ? "animate-spin" : ""} />
+            刷新 Key
+          </button>
           <button
             onClick={() => setShowFiles(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
@@ -110,6 +153,7 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto py-8 px-4 no-bar">
           <div className="max-w-2xl mx-auto space-y-6">
+            {error && <div className="glass px-4 py-3 rounded-xl text-sm text-red-400">{error}</div>}
             {messages.map(msg => <MessageBubble key={msg.id} msg={msg} />)}
             {sending && (
               <div className="flex gap-3 animate-fade-up">
@@ -147,8 +191,10 @@ export default function ChatPage() {
             <textarea
               ref={textRef}
               value={input}
-              onChange={e => { setInput(e.target.value); autoResize() }}
+              onChange={e => updateInput(e.target.value)}
+              onInput={e => updateInput(e.currentTarget.value)}
               onKeyDown={handleKey}
+              aria-label="聊天输入"
               placeholder="输入消息，Shift+Enter 换行…"
               rows={1}
               className="w-full px-4 pt-3.5 pb-1 bg-transparent outline-none text-sm resize-none text-stone-200 placeholder:text-stone-600 font-sans"
@@ -193,7 +239,8 @@ export default function ChatPage() {
               </div>
               <button
                 onClick={send}
-                disabled={!input.trim() || sending}
+                disabled={sending}
+                aria-label="发送消息"
                 className="w-8 h-8 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-25 disabled:cursor-not-allowed text-black transition-all hover:shadow-lg hover:shadow-amber-500/20"
               >
                 <Send size={13} />

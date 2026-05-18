@@ -4,6 +4,7 @@ import {
   Plus, MessageSquare, ImageIcon, Settings,
   MoreHorizontal, Sparkles, User, ChevronRight,
 } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext"
 
 const HISTORY = [
   { id: "1", title: "线代教学助手" },
@@ -21,6 +22,7 @@ const BOTS = [
 export default function Sidebar() {
   const loc = useLocation()
   const navigate = useNavigate()
+  const { account } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
   const onChat = loc.pathname.startsWith("/chat")
   const onImage = loc.pathname === "/image"
@@ -181,9 +183,10 @@ export default function Sidebar() {
           >
             <User size={13} className="text-stone-500" />
           </div>
-          <span className="text-xs text-stone-500 truncate">用户</span>
+          <span className="text-xs text-stone-500 truncate">{account?.user.name || "用户"}</span>
         </div>
         <button
+          onClick={() => navigate("/account")}
           className="w-7 h-7 rounded-md flex items-center justify-center text-stone-600 hover:text-stone-400 hover:bg-white/5 transition-colors"
           title="设置"
         >

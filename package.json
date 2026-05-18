@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5175 --host",
+    "dev:api": "node server/index.mjs",
+    "test:flow": "node server/test-flow.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
