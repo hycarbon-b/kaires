@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base — mirrors company site dark theme ── */
+html {
+  scroll-behavior: smooth;
+  background-color: #07070a;
+  color: #fafaf9;
+}
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background-color: #07070a;
+  color: #fafaf9;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #07070a; }
+::-webkit-scrollbar-thumb { background: #292524; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #44403c; }
+.no-bar::-webkit-scrollbar { display: none; }
+.no-bar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ── Display font ─────────────────────────── */
+.font-display { font-family: 'Bebas Neue', system-ui, sans-serif; letter-spacing: 0.06em; }
+
+/* ── Gradient text: amber → orange ─────────── */
+.grad-text {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass card ───────────────────────────── */
+.glass {
+  background: rgba(14, 14, 18, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 191, 36, 0.08);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass:hover {
+  border-color: rgba(251, 191, 36, 0.18);
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.05);
+}
+
+/* ── Amber glow ───────────────────────────── */
+.a-glow {
+  box-shadow: 0 0 32px rgba(251, 191, 36, 0.15), 0 0 0 1px rgba(251, 191, 36, 0.2);
+}
+
+/* ── Dot grid background (amber on dark) ─── */
+.dot-bg {
+  background-image:
+    linear-gradient(rgba(251,191,36,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(251,191,36,0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Canvas dot grid (node workbench) ───────── */
+.canvas-dot-bg {
+  background-color: transparent;
+  background-image: radial-gradient(circle, rgba(251,191,36,0.18) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Code block ───────────────────────────── */
+.code-block {
+  background: #09090c;
+  border: 1px solid #1c1917;
+  border-radius: 10px;
+  padding: 1.25rem;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: #d6d3d1;
+}
+
+/* ── Input focus ring ─────────────────────── */
+.input-dark {
+  background: rgba(9, 9, 12, 0.9);
+  border: 1px solid #1c1917;
+  border-radius: 12px;
+  color: #fafaf9;
+  transition: border-color 0.15s ease;
+}
+.input-dark:focus-within {
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.06);
+}
