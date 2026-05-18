@@ -14,6 +14,10 @@ export function newSessionId() {
   return `${randomUUID()}.${randomBytes(24).toString("base64url")}`
 }
 
+export function newCustomerApiKey() {
+  return `sk-kaires_${randomBytes(32).toString("base64url")}`
+}
+
 export function encryptKey(rawKey) {
   return Buffer.from(rawKey, "utf8").toString("base64url")
 }

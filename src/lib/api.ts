@@ -1,7 +1,7 @@
 export interface AccountState {
   user: { id: number; email: string; name: string }
   subscription: { plan: string; status: string; monthly_limit: number; used_this_month: number; current_period_end: string }
-  apiKey?: { provider: string; token_id?: string; masked_key: string; refreshed_at: string }
+  apiKey?: { provider: string; token_id?: string; masked_key: string; refreshed_at: string; last_used_at?: string; key?: string }
   gateway: { mock: boolean }
 }
 

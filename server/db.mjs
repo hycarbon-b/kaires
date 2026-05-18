@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS api_keys (
   token_id TEXT,
   key_cipher TEXT NOT NULL,
   masked_key TEXT NOT NULL,
+  gateway_key_cipher TEXT,
+  gateway_token_id TEXT,
+  last_used_at TEXT,
   refreshed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -53,6 +56,11 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 `)
+
+const apiKeyColumns = new Set(db.prepare("PRAGMA table_info(api_keys)").all().map(column => column.name))
+if (!apiKeyColumns.has("gateway_key_cipher")) db.exec("ALTER TABLE api_keys ADD COLUMN gateway_key_cipher TEXT")
+if (!apiKeyColumns.has("gateway_token_id")) db.exec("ALTER TABLE api_keys ADD COLUMN gateway_token_id TEXT")
+if (!apiKeyColumns.has("last_used_at")) db.exec("ALTER TABLE api_keys ADD COLUMN last_used_at TEXT")
 
 export function nowIso() {
   return new Date().toISOString()

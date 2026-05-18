@@ -1,13 +1,28 @@
 import { createServer } from "node:http"
 import { db, maskKey, nextMonthIso, nowIso, publicUser } from "./db.mjs"
-import { decryptKey, encryptKey, hashPassword, newSessionId, verifyPassword } from "./crypto.mjs"
+import { decryptKey, encryptKey, hashPassword, newCustomerApiKey, newSessionId, verifyPassword } from "./crypto.mjs"
 import { chatWithGateway, createGatewayToken, isMockGateway } from "./newApiClient.mjs"
 
 const PLAN_LIMITS = { free: 100, pro: 2000, team: 10000 }
 
 function json(res, status, body, headers = {}) {
-  res.writeHead(status, { "Content-Type": "application/json", ...headers })
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    ...headers,
+  })
   res.end(JSON.stringify(body))
+}
+
+function empty(res, status = 204) {
+  res.writeHead(status, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  })
+  res.end()
 }
 
 function parseCookies(header = "") {
@@ -38,7 +53,7 @@ function getCurrentUser(req) {
 
 function getAccount(userId) {
   const subscription = db.prepare("SELECT * FROM subscriptions WHERE user_id = ?").get(userId)
-  const apiKey = db.prepare("SELECT provider, token_id, masked_key, refreshed_at FROM api_keys WHERE user_id = ?").get(userId)
+  const apiKey = db.prepare("SELECT provider, token_id, masked_key, refreshed_at, last_used_at FROM api_keys WHERE user_id = ?").get(userId)
   return { subscription, apiKey, gateway: { mock: isMockGateway() } }
 }
 
@@ -59,18 +74,95 @@ function ensureSubscription(userId) {
 }
 
 async function refreshKeyForUser(user) {
-  const token = await createGatewayToken({ userId: user.id, email: user.email })
+  const customerKey = newCustomerApiKey()
+  const gatewayToken = await createGatewayToken({ userId: user.id, email: user.email })
   db.prepare(`
-    INSERT INTO api_keys (user_id, provider, token_id, key_cipher, masked_key, refreshed_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO api_keys (user_id, provider, token_id, key_cipher, masked_key, gateway_key_cipher, gateway_token_id, refreshed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET
       provider = excluded.provider,
       token_id = excluded.token_id,
       key_cipher = excluded.key_cipher,
       masked_key = excluded.masked_key,
+      gateway_key_cipher = excluded.gateway_key_cipher,
+      gateway_token_id = excluded.gateway_token_id,
       refreshed_at = excluded.refreshed_at
-  `).run(user.id, token.provider, token.tokenId, encryptKey(token.key), maskKey(token.key), nowIso())
-  return db.prepare("SELECT provider, token_id, masked_key, refreshed_at FROM api_keys WHERE user_id = ?").get(user.id)
+  `).run(
+    user.id,
+    "kaires-api",
+    `kaires-${user.id}-${Date.now()}`,
+    encryptKey(customerKey),
+    maskKey(customerKey),
+    encryptKey(gatewayToken.key),
+    gatewayToken.tokenId,
+    nowIso(),
+  )
+  const apiKey = db.prepare("SELECT provider, token_id, masked_key, refreshed_at, last_used_at FROM api_keys WHERE user_id = ?").get(user.id)
+  return { ...apiKey, key: customerKey }
+}
+
+function findUserByApiKey(rawKey) {
+  if (!rawKey) return null
+  const rows = db.prepare("SELECT api_keys.*, users.email, users.name FROM api_keys JOIN users ON users.id = api_keys.user_id").all()
+  return rows.find(row => decryptKey(row.key_cipher) === rawKey) || null
+}
+
+function getProxyKey(apiKeyRow) {
+  return decryptKey(apiKeyRow.gateway_key_cipher || apiKeyRow.key_cipher)
+}
+
+function openAIChatResponse({ model, content }) {
+  return {
+    id: `chatcmpl_${Date.now()}`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model,
+    choices: [
+      {
+        index: 0,
+        message: { role: "assistant", content },
+        finish_reason: "stop",
+      },
+    ],
+    usage: {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+    },
+  }
+}
+
+async function handleOpenAIRequest(req, res) {
+  const url = new URL(req.url, "http://localhost")
+  if (req.method === "OPTIONS") return empty(res)
+  if (req.method === "GET" && url.pathname === "/v1/models") {
+    return json(res, 200, {
+      object: "list",
+      data: ["gpt-4o-mini", "gpt-4o", "claude-3-7-sonnet", "gemini-2.5-pro"].map(id => ({ id, object: "model", owned_by: "kaires" })),
+    })
+  }
+  if (req.method !== "POST" || url.pathname !== "/v1/chat/completions") return json(res, 404, { error: { message: "Route not found" } })
+
+  const auth = req.headers.authorization || ""
+  const apiKey = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : ""
+  const apiKeyRow = findUserByApiKey(apiKey)
+  if (!apiKeyRow) return json(res, 401, { error: { message: "Invalid API key", type: "invalid_request_error" } })
+
+  const subscription = ensureSubscription(apiKeyRow.user_id)
+  if (subscription.status !== "active" || subscription.used_this_month >= subscription.monthly_limit) {
+    return json(res, 402, { error: { message: "Subscription quota exceeded", type: "insufficient_quota" } })
+  }
+
+  const body = await readBody(req)
+  const messages = Array.isArray(body.messages) ? body.messages : []
+  const model = body.model || "gpt-4o-mini"
+  const content = await chatWithGateway({ apiKey: getProxyKey(apiKeyRow), model, messages })
+  const userMessage = [...messages].reverse().find(message => message.role === "user")
+  if (userMessage?.content) db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'user', ?, ?)").run(apiKeyRow.user_id, userMessage.content, model)
+  db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'assistant', ?, ?)").run(apiKeyRow.user_id, content, model)
+  db.prepare("UPDATE subscriptions SET used_this_month = used_this_month + 1 WHERE user_id = ?").run(apiKeyRow.user_id)
+  db.prepare("UPDATE api_keys SET last_used_at = ? WHERE user_id = ?").run(nowIso(), apiKeyRow.user_id)
+  return json(res, 200, openAIChatResponse({ model, content }))
 }
 
 export async function handleRequest(req, res) {
@@ -160,7 +252,7 @@ export async function handleRequest(req, res) {
       }
       const body = await readBody(req)
       const messages = Array.isArray(body.messages) ? body.messages : []
-      const content = await chatWithGateway({ apiKey: decryptKey(apiKeyRow.key_cipher), model: body.model, messages })
+      const content = await chatWithGateway({ apiKey: getProxyKey(apiKeyRow), model: body.model, messages })
       const userMessage = [...messages].reverse().find(message => message.role === "user")
       if (userMessage?.content) db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'user', ?, ?)").run(user.id, userMessage.content, body.model || null)
       db.prepare("INSERT INTO chat_messages (user_id, role, content, model) VALUES (?, 'assistant', ?, ?)").run(user.id, content, body.model || null)
@@ -179,6 +271,10 @@ export async function handleRequest(req, res) {
 export function createAppServer() {
   return createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost")
+    if (url.pathname.startsWith("/v1/")) {
+      await handleOpenAIRequest(req, res)
+      return
+    }
     if (url.pathname.startsWith("/api/")) {
       await handleRequest(req, res)
       return

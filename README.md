@@ -131,23 +131,78 @@ Supported plans:
 
 `POST /api/api-key/refresh`
 
-Refreshes the user's managed API Key and stores only an encoded server-side copy plus masked metadata for the UI.
+Generates a user-facing Kaires API Key for external OpenAI-compatible clients. The full key is returned only once after generation; later account reads only return the masked key.
 
 Example response:
 
 ```json
 {
   "apiKey": {
-    "provider": "managed-api",
-    "token_id": "123",
+    "provider": "kaires-api",
+    "token_id": "kaires-1-1779100000000",
+    "key": "sk-kaires_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "masked_key": "sk-kai********abcd",
-    "refreshed_at": "2026-05-18T00:00:00.000Z"
+    "refreshed_at": "2026-05-18T00:00:00.000Z",
+    "last_used_at": null
   },
   "gateway": {
     "mock": false
   }
 }
 ```
+
+Users can copy this key from `/account` and use it in external tools such as Chatbox, Cherry Studio, Open WebUI, or any OpenAI SDK compatible client.
+
+Typical client settings:
+
+```text
+Base URL: https://your-domain.example/v1
+API Key:  sk-kaires_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Model:    gpt-4o-mini
+```
+
+### OpenAI-Compatible API
+
+`POST /v1/chat/completions`
+
+```bash
+curl https://your-domain.example/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-kaires_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      { "role": "user", "content": "Hello" }
+    ]
+  }'
+```
+
+The response follows the OpenAI chat completions shape:
+
+```json
+{
+  "id": "chatcmpl_1779100000000",
+  "object": "chat.completion",
+  "created": 1779100000,
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "..." },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  }
+}
+```
+
+`GET /v1/models`
+
+Returns a small OpenAI-compatible model list for client discovery.
 
 ### Chat
 
@@ -162,7 +217,7 @@ Example response:
 }
 ```
 
-The backend checks the user's subscription quota, ensures a managed API Key exists, proxies the chat request through the gateway, stores message history, and increments monthly usage.
+Internal app chat endpoint. The backend checks the user's subscription quota, ensures an API Key exists, proxies the chat request through the gateway, stores message history, and increments monthly usage.
 
 ## Database
 
@@ -173,7 +228,7 @@ Tables:
 - `users`: registered users and password hashes
 - `sessions`: cookie sessions
 - `subscriptions`: plan, status, limit, usage, period end
-- `api_keys`: managed API Key metadata and server-side key storage
+- `api_keys`: user-facing API Key metadata, masked key display, upstream gateway token, and last-used timestamp
 - `chat_messages`: persisted chat history
 
 The `data/` directory is ignored by git.

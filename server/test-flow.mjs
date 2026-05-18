@@ -24,14 +24,22 @@ const email = `tester-${Date.now()}@kaires.local`
 await request("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password: "secret123", name: "Flow Tester" }) })
 await request("/api/subscription", { method: "POST", body: JSON.stringify({ plan: "pro" }) })
 const key = await request("/api/api-key/refresh", { method: "POST" })
-if (!key.apiKey?.masked_key) throw new Error("missing refreshed key")
+if (!key.apiKey?.masked_key || !key.apiKey?.key) throw new Error("missing refreshed key")
 const chat = await request("/api/chat", {
   method: "POST",
   body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "ping" }] }),
 })
 if (!chat.message?.content.includes("ping")) throw new Error("chat response did not include mock echo")
+const external = await fetch(`${base}/v1/chat/completions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key.apiKey.key}` },
+  body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "external ping" }] }),
+})
+const externalBody = await external.json()
+if (!external.ok) throw new Error(`/v1/chat/completions failed: ${external.status} ${JSON.stringify(externalBody)}`)
+if (!externalBody.choices?.[0]?.message?.content.includes("external ping")) throw new Error("external chat response did not include mock echo")
 const me = await request("/api/me")
-if (me.subscription.used_this_month !== 1) throw new Error("subscription usage was not incremented")
+if (me.subscription.used_this_month !== 2) throw new Error("subscription usage was not incremented")
 
-console.log("E2E OK", { email, plan: me.subscription.plan, used: me.subscription.used_this_month, key: key.apiKey.masked_key })
+console.log("E2E OK", { email, plan: me.subscription.plan, used: me.subscription.used_this_month, key: key.apiKey.masked_key, external: "/v1/chat/completions" })
 server.close()
