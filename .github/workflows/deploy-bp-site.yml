@@ -3,7 +3,7 @@ name: Deploy bp-site
 on:
   workflow_dispatch:
   push:
-    branches: [bp-site]
+    branches: [bp-site, main, 'copilot/**']
 
 permissions:
   contents: write

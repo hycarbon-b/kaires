@@ -3,7 +3,7 @@ name: Deploy company-site
 on:
   workflow_dispatch:
   push:
-    branches: [company-site]
+    branches: [company-site, main, 'copilot/**']
 
 permissions:
   contents: write
