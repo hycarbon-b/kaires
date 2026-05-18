@@ -204,12 +204,13 @@ function Hero() {
         </div>
 
         <p className="text-xs uppercase tracking-[0.25em] text-stone-500 mb-8">
-          Enterprise AI Infrastructure
+          For Developers · Creators · Enterprise
         </p>
 
         <p className="text-base sm:text-lg text-stone-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          统一接口调用 GPT、Claude、Gemini 等 <span className="text-stone-200">40+ 顶级模型</span>，
-          从 API 接入到<span className="text-amber-400">全栈定制交付</span>，为企业提供稳定、高效、安全的 AI 基础设施与定制化应用。
+          <span className="text-stone-200">一把 Key，接入 40+ 顶级模型</span>。
+          个人开发者拿 OpenAI 兼容 API在 Chatbox / Cursor / 代码里直接调用；
+          企业可获得<span className="text-amber-400"> 全栈定制交付</span>与容灾路由。
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -218,14 +219,14 @@ function Hero() {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-all hover:shadow-xl hover:shadow-amber-500/20 text-sm"
           >
             <Sparkles size={15} />
-            KAIROS APP
+            免费获取 API Key
           </Link>
           <Link
             to="/showcase"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-stone-100 font-medium rounded-lg transition-colors border border-stone-700 text-sm"
           >
             <Monitor size={15} />
-            体验中心
+            企业体验中心
           </Link>
         </div>
 
@@ -1055,16 +1056,17 @@ function AudienceSplit() {
                 <Users size={22} className="text-amber-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-0.5">个人用户</p>
-                <h3 className="font-display text-xl font-extrabold uppercase tracking-wide text-stone-100">个人 AI 助手</h3>
+                <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-0.5">个人开发者 & 创作者</p>
+                <h3 className="font-display text-xl font-extrabold uppercase tracking-wide text-stone-100">一把 Key，任意调用</h3>
               </div>
             </div>
             <p className="text-stone-400 text-sm leading-relaxed">
-              无需技术背景，打开即用。和顶级 AI 模型对话、整理知识库、处理图片——
-              <span className="text-stone-200">日常效率，一站搞定</span>。
+              注册即拿 <span className="text-stone-200">OpenAI 兼容 API Key</span>，
+              在 Chatbox / Cursor / Cherry Studio / 自己的代码里直接调用 40+ 模型；
+              还可以在自带的 KAIROS APP 里聊天、做 RAG、出图——<span className="text-amber-400">零门槛起步</span>。
             </p>
             <ul className="space-y-2.5">
-              {['多模型智能对话，自由切换', 'RAG 文件问答，上传即检索', 'AI 图片工作台，6 种处理工具', '一键分享 Bot，无需登录即用'].map(f => (
+              {['OpenAI 兼容 Base URL，现有 SDK 零改动', '一个账号管理多把 Key，精细看用量', '内置 APP：对话 / 文件问答 / 图片工作台', '按量计费，10 元起，到期不续费不扣款'].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-stone-300">
                   <Check size={11} className="text-amber-400 shrink-0" />
                   {f}
@@ -1074,7 +1076,7 @@ function AudienceSplit() {
             <Link to="/app"
               className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold rounded-lg transition-colors w-fit">
               <Sparkles size={14} />
-              立即体验 KAIROS APP
+              免费获取 API Key
             </Link>
           </div>
 

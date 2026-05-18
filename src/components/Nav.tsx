@@ -83,16 +83,16 @@ export default function Nav() {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           <Link
             to="/app"
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-amber-300 hover:text-amber-200 border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/5 rounded-lg transition-all"
+            className="text-sm text-stone-400 hover:text-stone-100 transition-colors"
           >
-            <Sparkles size={13} />
-            KAIROS APP
+            登录
           </Link>
           <Link
-            to="/api"
-            className="px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
+            to="/app"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
           >
-            获取 API Key
+            <Sparkles size={13} />
+            免费获取 API Key
           </Link>
         </div>
 
@@ -149,17 +149,17 @@ export default function Nav() {
             <Link
               to="/app"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-amber-300 border border-amber-500/30 rounded-lg"
+              className="px-4 py-2.5 text-sm text-stone-300 border border-stone-700 rounded-lg text-center"
             >
-              <Sparkles size={13} />
-              KAIROS APP
+              登录
             </Link>
             <Link
-              to="/api"
+              to="/app"
               onClick={() => setOpen(false)}
-              className="px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg text-center"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg"
             >
-              获取 API Key
+              <Sparkles size={13} />
+              免费获取 API Key
             </Link>
           </div>
         </div>
