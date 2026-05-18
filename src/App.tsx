@@ -6,6 +6,8 @@ import ApiPage from './pages/Api'
 import FinLabPage from './pages/FinLab'
 import KairosAppPage from './pages/KairosApp'
 import ShowcasePage from './pages/Showcase'
+import ChatLandingPage from './pages/ChatLanding'
+import ImageLandingPage from './pages/ImageLanding'
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
           <Route path="/fin-lab" element={<FinLabPage />} />
           <Route path="/app" element={<KairosAppPage />} />
           <Route path="/showcase" element={<ShowcasePage />} />
+          <Route path="/ai-chat" element={<ChatLandingPage />} />
+          <Route path="/ai-image" element={<ImageLandingPage />} />
         </Routes>
       </div>
     </BrowserRouter>

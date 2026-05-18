@@ -8,6 +8,11 @@ const NAV_LINKS = [
   { label: '定价', href: '/#pricing' },
 ]
 
+const LANDING_LINKS = [
+  { label: 'AI 聊天', to: '/ai-chat' },
+  { label: 'AI 图片', to: '/ai-image' },
+]
+
 export default function Nav() {
   const [open, setOpen] = useState(false)
   const loc = useLocation()
@@ -34,6 +39,19 @@ export default function Nav() {
             >
               {l.label}
             </a>
+          ))}
+          {LANDING_LINKS.map(l => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={`px-3.5 py-2 text-sm rounded-lg transition-colors ${
+                loc.pathname === l.to
+                  ? 'text-stone-100 bg-stone-800/40'
+                  : 'text-stone-400 hover:text-stone-100 hover:bg-stone-800/40'
+              }`}
+            >
+              {l.label}
+            </Link>
           ))}
           {/* Showcase */}
           <Link
@@ -100,6 +118,16 @@ export default function Nav() {
             >
               {l.label}
             </a>
+          ))}
+          {LANDING_LINKS.map(l => (
+            <Link
+              key={l.to}
+              to={l.to}
+              onClick={() => setOpen(false)}
+              className="px-3 py-2.5 text-sm text-stone-400 hover:text-stone-100 rounded-lg hover:bg-stone-800/40 transition-colors"
+            >
+              {l.label}
+            </Link>
           ))}
           <Link
             to="/fin-lab"
