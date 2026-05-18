@@ -87,11 +87,11 @@ export default function AccountPage() {
                 <KeyRound size={16} className="text-amber-400" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-stone-100">New API Key</h2>
+                <h2 className="text-sm font-semibold text-stone-100">API 管理</h2>
                 <p className="text-xs text-stone-500 mt-1">
-                  {account.apiKey ? `${account.apiKey.provider} · ${account.apiKey.masked_key}` : "尚未生成，聊天时也会自动刷新"}
+                  {account.apiKey ? `托管 API Key · ${account.apiKey.masked_key}` : "尚未生成，聊天时也会自动刷新"}
                 </p>
-                <p className="text-[10px] text-stone-700 mt-1">{account.gateway.mock ? "Mock 网关模式" : "真实 New API 网关模式"}</p>
+                <p className="text-[10px] text-stone-700 mt-1">{account.gateway.mock ? "本地测试模式" : "托管网关模式"}</p>
               </div>
             </div>
             <button
@@ -99,7 +99,7 @@ export default function AccountPage() {
               disabled={busy === "refresh"}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-sm font-semibold transition-colors"
             >
-              <RefreshCcw size={13} className={busy === "refresh" ? "animate-spin" : ""} /> 刷新 Key
+              <RefreshCcw size={13} className={busy === "refresh" ? "animate-spin" : ""} /> 刷新 API Key
             </button>
           </div>
         </section>

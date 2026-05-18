@@ -35,7 +35,7 @@ export default function AuthPage() {
           <span className="font-display text-black tracking-widest">K</span>
         </div>
         <h1 className="font-display text-3xl text-stone-100 tracking-widest uppercase">Kaires Account</h1>
-        <p className="text-sm text-stone-500 mt-1 mb-6">登录后由后台托管 New API Key，并按订阅额度代理聊天。</p>
+        <p className="text-sm text-stone-500 mt-1 mb-6">登录后可使用后台托管的 API Key，并按订阅额度进行聊天。</p>
 
         <div className="flex p-1 rounded-xl mb-4" style={{ background: "rgba(9,9,12,0.9)", border: "1px solid rgba(251,191,36,0.08)" }}>
           {(["login", "register"] as const).map(item => (

@@ -139,7 +139,7 @@ export async function handleRequest(req, res) {
       return json(res, 200, { user: publicUser(user), ...getAccount(user.id) })
     }
 
-    if (req.method === "POST" && url.pathname === "/api/new-api/refresh-key") {
+    if (req.method === "POST" && url.pathname === "/api/api-key/refresh") {
       const user = requireUser(req, res)
       if (!user) return
       const apiKey = await refreshKeyForUser(user)

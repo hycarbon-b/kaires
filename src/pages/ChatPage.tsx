@@ -112,7 +112,7 @@ export default function ChatPage() {
                 className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"
               />
               <span className="text-[10px] text-stone-500 uppercase tracking-wider">
-                {account?.apiKey ? `${account.subscription.plan.toUpperCase()} · ${account.apiKey.masked_key}` : "等待刷新 New API Key"}
+                {account?.apiKey ? `${account.subscription.plan.toUpperCase()} · ${account.apiKey.masked_key}` : "等待刷新 API Key"}
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function ChatPage() {
           <button
             onClick={onRefreshKey}
             disabled={refreshing}
-            aria-label="刷新 New API Key"
+            aria-label="刷新 API Key"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-stone-500 hover:text-amber-400 hover:bg-white/5 disabled:opacity-50 transition-colors"
           >
             <RefreshCcw size={12} className={refreshing ? "animate-spin" : ""} />

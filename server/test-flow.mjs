@@ -1,4 +1,4 @@
-process.env.NEW_API_MOCK ||= "1"
+process.env.GATEWAY_MOCK ||= "1"
 process.env.KAIRES_DB_PATH ||= `./data/test-${Date.now()}.sqlite`
 
 const { createAppServer } = await import("./app.mjs")
@@ -23,7 +23,7 @@ async function request(path, options = {}) {
 const email = `tester-${Date.now()}@kaires.local`
 await request("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password: "secret123", name: "Flow Tester" }) })
 await request("/api/subscription", { method: "POST", body: JSON.stringify({ plan: "pro" }) })
-const key = await request("/api/new-api/refresh-key", { method: "POST" })
+const key = await request("/api/api-key/refresh", { method: "POST" })
 if (!key.apiKey?.masked_key) throw new Error("missing refreshed key")
 const chat = await request("/api/chat", {
   method: "POST",

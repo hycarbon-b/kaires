@@ -37,7 +37,7 @@ export function updateSubscription(plan: string) {
 }
 
 export function refreshKey() {
-  return api<Pick<AccountState, "apiKey" | "gateway">>("/api/new-api/refresh-key", { method: "POST" })
+  return api<Pick<AccountState, "apiKey" | "gateway">>("/api/api-key/refresh", { method: "POST" })
 }
 
 export function sendChat(model: string, messages: { role: "user" | "assistant"; content: string }[]) {
