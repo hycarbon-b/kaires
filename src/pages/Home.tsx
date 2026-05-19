@@ -760,6 +760,17 @@ function Pricing() {
       desc: '个人开发者快速上手',
       features: ['每月 $5 免费额度', '所有模型访问', 'API 文档与 SDK', '社区支持'],
       cta: '免费注册',
+      href: '/api',
+      highlight: false,
+    },
+    {
+      name: 'KAIROS APP',
+      price: '按量 / 订阅',
+      period: '',
+      desc: '更适合直接使用的 Chat 与图像工具',
+      features: ['Pay as you go，按实际使用计费', 'Subscription 订阅方案，适合高频使用', 'Chat 与图像工具统一入口', '适合个人创作与小团队协作'],
+      cta: '体验 KAIROS APP',
+      href: '/app',
       highlight: false,
     },
     {
@@ -769,6 +780,7 @@ function Pricing() {
       desc: '成长中的技术团队',
       features: ['按量计费，无月度上限', '优先路由 & 更低延迟', '用量分析仪表盘', '邮件支持（8 h 响应）', '团队成员管理'],
       cta: '14 天免费试用',
+      href: '/api',
       highlight: true,
     },
     {
@@ -778,6 +790,7 @@ function Pricing() {
       desc: '大规模企业级部署',
       features: ['私有化 / 混合云部署', '独立集群 & 专属资源', 'SLA 99.9% 保障', '专属客户成功经理', '合规审计报告', '定制模型接入'],
       cta: '联系销售',
+      href: '#',
       highlight: false,
     },
   ]
@@ -788,13 +801,13 @@ function Pricing() {
           <h2 className="font-display text-3xl sm:text-4xl font-extrabold mb-4 uppercase tracking-wide">
             简单透明的定价
           </h2>
-          <p className="text-stone-400">按实际用量付费，无隐藏费用。</p>
+          <p className="text-stone-400">API、KAIROS APP 和企业交付都可以按适合的方式开始，没有多余门槛。</p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 items-start">
+        <div className="grid gap-4 items-stretch sm:grid-cols-2 xl:grid-cols-4">
           {plans.map(plan => (
             <div
               key={plan.name}
-              className={`rounded-xl border p-6 flex flex-col relative ${
+              className={`rounded-xl border p-6 flex h-full flex-col relative ${
                 plan.highlight
                   ? 'border-amber-500/40 bg-amber-500/5 a-glow'
                   : 'border-stone-800 bg-stone-900/40'
@@ -819,15 +832,16 @@ function Pricing() {
                   </li>
                 ))}
               </ul>
-              <button
-                className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-colors ${
+              <Link
+                to={plan.href}
+                className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-colors text-center ${
                   plan.highlight
                     ? 'bg-amber-500 hover:bg-amber-400 text-black'
                     : 'bg-stone-800 hover:bg-stone-700 text-stone-100'
                 }`}
               >
                 {plan.cta}
-              </button>
+              </Link>
             </div>
           ))}
         </div>

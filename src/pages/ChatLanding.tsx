@@ -1,26 +1,37 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ArrowRight, Bot, Check, FileSearch, Globe2, KeyRound,
-  MessageSquare, ShieldCheck, Sparkles, Zap,
+  ArrowRight, Check, FileSearch, Globe2, KeyRound,
+  MessageSquare, ShieldCheck,
 } from 'lucide-react'
 
-const USE_CASES = [
-  { title: '个人效率助手', desc: '写作、总结、翻译、代码解释，日常任务直接对话完成。' },
-  { title: '企业知识问答', desc: '接入文档库与业务资料，让客服、销售、运营都能得到可信答案。' },
-  { title: '多模型聊天入口', desc: '一个聊天界面切换多家模型，按质量、速度和成本灵活选择。' },
+const HIGHLIGHTS = [
+  {
+    icon: <MessageSquare size={18} />,
+    title: '一把 Key，接入 40+ 顶级模型',
+    desc: '统一接入 GPT、Claude、Gemini 等主流模型，用一个入口管理调用、切换与扩展。',
+  },
+  {
+    icon: <FileSearch size={18} />,
+    title: 'KAIROS APP 更好用',
+    desc: '除了 API，我们也提供更顺手的 Chat 和图像工具，适合直接拿来用，也适合给团队落地。',
+  },
+  {
+    icon: <ShieldCheck size={18} />,
+    title: '企业可做定制交付',
+    desc: '从业务助手到知识库应用，再到容灾路由与部署方案，支持全栈定制交付。',
+  },
 ]
 
-const CAPABILITIES = [
-  { icon: <MessageSquare size={16} />, label: '上下文连续对话' },
-  { icon: <FileSearch size={16} />, label: '知识库检索增强' },
-  { icon: <Globe2 size={16} />, label: '多语言内容生成' },
-  { icon: <ShieldCheck size={16} />, label: '团队权限与审计' },
+const SCENARIOS = [
+  '个人开发者可在 Chatbox、Cursor 和代码里直接调用',
+  '团队可直接使用 KAIROS APP 的 Chat 和图像工具',
+  '企业可获得全栈定制交付与容灾路由',
 ]
 
 function setMeta() {
   document.title = 'AI 聊天助手 | KAIROS 凯若斯'
-  const description = 'KAIROS AI 聊天助手面向个人与团队，提供多模型对话、知识库问答、内容创作和 API Key 托管能力。'
+  const description = 'KAIROS 提供 AI 中转、KAIROS APP 和企业应用定制服务，一把 Key 接入 40+ 顶级模型，支持 OpenAI 兼容 API 与容灾路由。'
   let meta = document.querySelector('meta[name="description"]')
   if (!meta) {
     meta = document.createElement('meta')
@@ -30,131 +41,119 @@ function setMeta() {
   meta.setAttribute('content', description)
 }
 
-function ChatScene() {
-  return (
-    <div className="absolute inset-0 overflow-hidden opacity-80">
-      <div className="dot-bg absolute inset-0" />
-      <div className="absolute inset-x-0 top-24 mx-auto max-w-5xl px-4">
-        <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-4 items-start">
-          <div className="hidden md:block glass p-4 translate-y-16">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] text-stone-500 font-mono uppercase tracking-widest">knowledge ready</span>
-            </div>
-            {['产品手册.pdf', '合同模板.docx', '客服话术.xlsx'].map((item, index) => (
-              <div key={item} className="flex items-center gap-3 py-2 border-t border-stone-800/60 first:border-t-0">
-                <span className="w-6 h-6 rounded bg-amber-500/10 border border-amber-500/15 text-[10px] text-amber-400 flex items-center justify-center">
-                  {index + 1}
-                </span>
-                <span className="text-xs text-stone-500">{item}</span>
-              </div>
-            ))}
-          </div>
-          <div className="glass p-4 shadow-2xl shadow-black/40">
-            <div className="flex items-center gap-2 pb-3 border-b border-stone-800/60">
-              <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
-                <Bot size={14} className="text-black" />
-              </div>
-              <span className="text-xs text-stone-300 font-medium">KAIROS Chat</span>
-              <span className="ml-auto text-[10px] text-stone-600 uppercase tracking-widest">live</span>
-            </div>
-            <div className="py-4 space-y-3">
-              <div className="max-w-[78%] rounded-2xl rounded-tl-sm bg-stone-900 border border-stone-800 px-4 py-3 text-sm text-stone-300">
-                可以根据这三份资料，生成一段面向客户的产品说明吗？
-              </div>
-              <div className="ml-auto max-w-[78%] rounded-2xl rounded-tr-sm bg-amber-500 px-4 py-3 text-sm text-black font-medium">
-                当然。我会先抽取卖点，再按客户关心的问题组织成简洁话术。
-              </div>
-              <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-stone-900 border border-amber-500/15 px-4 py-3 text-sm text-stone-300 leading-relaxed">
-                <span className="text-amber-400">摘要已生成：</span> 该产品适合需要快速搭建智能客服、知识问答和内容协作的团队...
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl bg-[#09090c] border border-stone-800 px-3 py-2">
-              <span className="text-xs text-stone-600 flex-1">输入问题...</span>
-              <span className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
-                <ArrowRight size={13} className="text-black" />
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function ChatLanding() {
   useEffect(setMeta, [])
 
   return (
     <main className="pt-16 bg-[#07070a]">
-      <section className="relative min-h-[92vh] overflow-hidden flex items-end px-4 pb-16">
-        <ChatScene />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#07070a]/10 via-[#07070a]/55 to-[#07070a]" />
-        <div className="relative max-w-6xl mx-auto w-full">
+      <section className="px-4 py-20 sm:py-28 border-b border-stone-800/60">
+        <div className="max-w-5xl mx-auto">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs mb-6 uppercase tracking-widest">
-              <Sparkles size={12} /> AI Chat Landing
-            </div>
-            <h1 className="font-display text-[clamp(3rem,10vw,7rem)] leading-none tracking-[0.08em] uppercase text-white">
-              AI 聊天助手
+            <span className="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-amber-300">
+              AI Routing
+            </span>
+            <h1 className="mt-6 font-display text-[clamp(3rem,8vw,5.5rem)] leading-[0.95] uppercase text-white">
+              一把 Key
+              <br />
+              接入 40+ 顶级模型
             </h1>
-            <p className="mt-5 text-stone-300 text-lg sm:text-xl max-w-2xl leading-relaxed">
-              面向个人、团队和企业官网的智能对话入口。把内容创作、知识问答、客服回复和多模型调用收进一个清爽的聊天界面。
+            <p className="mt-6 max-w-2xl text-base leading-8 text-stone-300 sm:text-lg">
+              KAIROS 提供 AI 中转、更好用的 Chat 和图像工具，以及企业应用定制。个人开发者可以用 OpenAI 兼容 API 直接接入，企业则可以继续往前做到全栈交付和容灾路由。
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link to="/app" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-all hover:shadow-xl hover:shadow-amber-500/20 text-sm">
-                体验聊天应用 <ArrowRight size={15} />
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link to="/app" className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-amber-400">
+                打开 KAIROS APP <ArrowRight size={15} />
               </Link>
-              <Link to="/api" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-stone-100 font-medium rounded-lg transition-colors border border-stone-700 text-sm">
+              <Link to="/api" className="inline-flex items-center justify-center gap-2 rounded-lg border border-stone-700 bg-stone-900 px-6 py-3 text-sm font-medium text-stone-100 transition-colors hover:bg-stone-800">
                 获取 API Key <KeyRound size={15} />
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="py-20 px-4 border-y border-stone-800/60">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-3">
-          {CAPABILITIES.map(item => (
-            <div key={item.label} className="glass p-5 flex items-center gap-3">
-              <span className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/15 text-amber-400 flex items-center justify-center">
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            {HIGHLIGHTS.map(item => (
+              <div key={item.title} className="rounded-2xl border border-stone-800 bg-stone-950/70 p-6">
+                <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
                 {item.icon}
-              </span>
-              <span className="text-sm text-stone-300">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.8fr_1.2fr] gap-12 items-start">
-          <div>
-            <span className="text-xs text-amber-400 uppercase tracking-widest">Search Intent</span>
-            <h2 className="font-display text-4xl sm:text-5xl uppercase tracking-wide mt-3 mb-4">用户为什么会搜到这里</h2>
-            <p className="text-stone-400 leading-relaxed text-sm max-w-md">
-              这不是单纯的聊天玩具，而是给“想要马上开始对话、马上接入业务”的用户准备的入口。页面内容聚焦真实场景、结果和转化路径。
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {USE_CASES.map(item => (
-              <div key={item.title} className="glass p-5">
-                <Check size={16} className="text-amber-400 mb-5" />
-                <h3 className="text-sm font-semibold text-stone-100 mb-2">{item.title}</h3>
-                <p className="text-xs text-stone-500 leading-relaxed">{item.desc}</p>
+                </span>
+                <h2 className="text-lg font-semibold text-white">{item.title}</h2>
+                <p className="mt-2 text-sm leading-7 text-stone-400">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-4 border-t border-stone-800/60 bg-stone-950/40">
-        <div className="max-w-4xl mx-auto text-center">
-          <Zap size={20} className="text-amber-400 mx-auto mb-4" />
-          <h2 className="font-display text-3xl sm:text-4xl uppercase tracking-wide mb-4">从一次对话开始引流</h2>
-          <p className="text-stone-400 text-sm mb-8">给搜索 AI 聊天、智能客服、知识库问答的用户一个可理解、可体验、可转化的落点。</p>
-          <Link to="/app" className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors text-sm">
-            打开 KAIROS APP <ArrowRight size={15} />
-          </Link>
+      <section className="px-4 py-20">
+        <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <span className="text-xs uppercase tracking-[0.24em] text-amber-400">适合谁用</span>
+            <h2 className="mt-4 font-display text-4xl uppercase text-white sm:text-5xl">
+              从个人开发到企业交付
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-stone-400 sm:text-base">
+              如果你只想先把模型接起来，可以直接走 OpenAI 兼容 API。如果你希望拿到更完整的产品体验，可以用 KAIROS APP；如果你要面向业务上线，我们也可以继续做到定制交付。
+            </p>
+            <div className="mt-8 space-y-3">
+              {SCENARIOS.map(item => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-stone-800 bg-stone-950/50 px-4 py-4 text-sm text-stone-200">
+                  <Check size={16} className="text-amber-400" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-stone-800 bg-stone-950 p-6 sm:p-8">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Quick Preview</p>
+                <h3 className="mt-2 text-xl font-semibold text-white">KAIROS Service</h3>
+              </div>
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-emerald-300">
+                ready
+              </span>
+            </div>
+            <div className="space-y-4 py-6">
+              <div className="rounded-2xl border border-stone-800 bg-stone-900 px-4 py-3 text-sm leading-7 text-stone-300">
+                我需要一个稳定的 AI 接入方案，开发时想直接兼容 OpenAI，后面还可能做企业级应用。
+              </div>
+              <div className="rounded-2xl bg-amber-500 px-4 py-3 text-sm font-medium leading-7 text-black">
+                可以。先用一把 Key 接入 40+ 模型，在 Chatbox、Cursor 或代码里直接调用；后续再接 KAIROS APP，或者进入企业定制与容灾路由方案。
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-stone-800 bg-[#09090c] p-4">
+                  <MessageSquare size={16} className="text-amber-400" />
+                  <p className="mt-3 text-sm text-stone-200">OpenAI 兼容接入</p>
+                  <p className="mt-1 text-xs leading-6 text-stone-500">个人开发者可以在 Chatbox、Cursor 和现有代码里直接调用，几乎不用改使用习惯。</p>
+                </div>
+                <div className="rounded-2xl border border-stone-800 bg-[#09090c] p-4">
+                  <Globe2 size={16} className="text-amber-400" />
+                  <p className="mt-3 text-sm text-stone-200">企业级稳定性</p>
+                  <p className="mt-1 text-xs leading-6 text-stone-500">企业可以获得全栈定制交付，并通过容灾路由提升线上可用性和切换弹性。</p>
+                </div>
+              </div>
+            </div>
+            <Link to="/app" className="inline-flex items-center gap-2 text-sm font-medium text-amber-300 transition-colors hover:text-amber-200">
+              前往 KAIROS APP <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-stone-800/60 px-4 py-16">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-stone-800 bg-stone-950/70 px-6 py-10 text-center sm:px-10">
+          <h2 className="font-display text-3xl uppercase text-white sm:text-4xl">先接入，再决定走到多深</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-stone-400 sm:text-base">
+            你可以先用一把 Key 把模型接起来，也可以直接体验 KAIROS APP。等业务要上线时，再继续往企业应用定制和容灾架构推进。
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/app" className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-7 py-3 text-sm font-semibold text-black transition-colors hover:bg-amber-400">
+              体验 KAIROS APP <ArrowRight size={15} />
+            </Link>
+            <Link to="/api" className="inline-flex items-center justify-center gap-2 rounded-lg border border-stone-700 bg-stone-900 px-7 py-3 text-sm font-medium text-stone-100 transition-colors hover:bg-stone-800">
+              获取 API Key <KeyRound size={15} />
+            </Link>
+          </div>
         </div>
       </section>
     </main>

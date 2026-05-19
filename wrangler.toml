@@ -1,0 +1,25 @@
+name = "kaires-company"
+type = "javascript"
+compatibility_date = "2024-12-16"
+
+# Cloudflare Pages 配置
+[env.production]
+name = "kaires-company-prod"
+
+# 构建配置
+[build]
+command = "npm install && npm run build"
+cwd = "./kaires-company"
+root_dir = "."
+watch_paths = ["src/**/*.{ts,tsx,css}"]
+
+# 开发服务器配置
+[dev]
+port = 5173
+local_protocol = "http"
+
+# 路由重写规则（用于 SPA 路由）
+[[routes]]
+pattern = "/*"
+zone_name = ""
+custom_domain = false

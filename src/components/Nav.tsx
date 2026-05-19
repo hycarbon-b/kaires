@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Sparkles, FlaskConical, KeyRound } from 'lucide-react'
-
-const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5174'
+import { Menu, X, Sparkles, FlaskConical } from 'lucide-react'
 
 const NAV_LINKS = [
   { label: '产品特性', href: '/#features' },
@@ -90,13 +88,12 @@ export default function Nav() {
             <Sparkles size={13} />
             KAIROS APP
           </Link>
-          <a
-            href={`${APP_URL}/keys`}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
+          <Link
+            to="/api"
+            className="px-4 py-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black rounded-lg transition-colors"
           >
-            <KeyRound size={13} />
             获取 API Key
-          </a>
+          </Link>
         </div>
 
         {/* Mobile toggle */}
@@ -157,14 +154,13 @@ export default function Nav() {
               <Sparkles size={13} />
               KAIROS APP
             </Link>
-            <a
-              href={`${APP_URL}/keys`}
+            <Link
+              to="/api"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg"
+              className="px-4 py-2.5 text-sm font-medium bg-amber-500 text-black rounded-lg text-center"
             >
-              <KeyRound size={13} />
               获取 API Key
-            </a>
+            </Link>
           </div>
         </div>
       )}
